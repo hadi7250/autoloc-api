@@ -29,4 +29,9 @@ public class Paiement {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private ModePaiement modePaiement;
+
+    // N Paiement -> 1 Contrat (owning side)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_contrat")
+    private Contrat contrat;
 }

@@ -7,6 +7,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table (name = "client")
@@ -31,6 +33,13 @@ public class Client {
     @Column (nullable = false, unique = true, length = 30)
     private String numPermis;
 
+    @Column (nullable = false, length = 20)
+    private String telephone;
+
     @Column (nullable = false)
     private LocalDate dateInscription;
+
+    // 1 Client -> N Reservation (inverse side, persist cascades to new reservations)
+    @OneToMany(mappedBy = "client", cascade = CascadeType.PERSIST)
+    private List<Reservation> reservations = new ArrayList<>();
 }
