@@ -43,7 +43,6 @@ public class Vehicule {
             inverseJoinColumns = @JoinColumn(name = "id_equipement"))
     private Set<Equipement> equipements = new HashSet<>();
 
-    // Synchronize both sides of the many-to-many
     public void addEquipement(Equipement equipement) {
         equipements.add(equipement);
         equipement.getVehicules().add(this);
