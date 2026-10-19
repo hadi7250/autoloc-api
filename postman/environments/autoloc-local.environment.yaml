@@ -1,0 +1,6 @@
+name: autoloc-local
+values:
+  - key: base_url
+    value: 'http://localhost:8089/autoloc-api'
+    enabled: true
+    type: default
