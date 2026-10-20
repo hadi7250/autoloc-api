@@ -1,6 +1,6 @@
 package tn.esprit.autoloc.service;
 
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import tn.esprit.autoloc.domain.Vehicule;
 import tn.esprit.autoloc.repository.VehiculeRepository;
@@ -8,7 +8,7 @@ import tn.esprit.autoloc.repository.VehiculeRepository;
 import java.util.List;
 
 @Service
-@AllArgsConstructor          // Lombok generates constructor → DI by constructor ✅
+@RequiredArgsConstructor
 public class VehiculeServiceImpl implements IVehiculeService {
 
     private final VehiculeRepository vehiculeRepository;
@@ -20,8 +20,9 @@ public class VehiculeServiceImpl implements IVehiculeService {
 
     @Override
     public Vehicule retrieveVehicule(Long id) {
+        // Instead of returning null, throw an exception
         return vehiculeRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Vehicule not found: " + id));
+                .orElseThrow(() -> new RuntimeException("Vehicule introuvable avec l'id : " + id));
     }
 
     @Override
@@ -31,6 +32,9 @@ public class VehiculeServiceImpl implements IVehiculeService {
 
     @Override
     public Vehicule modifyVehicule(Vehicule v) {
+        if (!vehiculeRepository.existsById(v.getIdVehicule())) {
+            throw new RuntimeException("Impossible de modifier : Vehicule introuvable.");
+        }
         return vehiculeRepository.save(v);
     }
 
