@@ -3,6 +3,7 @@ package tn.esprit.autoloc.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import tn.esprit.autoloc.domain.Vehicule;
+import tn.esprit.autoloc.exception.RessourceIntrouvableException;
 import tn.esprit.autoloc.repository.VehiculeRepository;
 
 import java.util.List;
@@ -12,6 +13,8 @@ import java.util.List;
 public class VehiculeServiceImpl implements IVehiculeService {
 
     private final VehiculeRepository vehiculeRepository;
+    private final VehiculeValidator vehiculeValidator;
+    private final JournalisationService journalisationService;
 
     @Override
     public List<Vehicule> retrieveAllVehicules() {
@@ -20,26 +23,38 @@ public class VehiculeServiceImpl implements IVehiculeService {
 
     @Override
     public Vehicule retrieveVehicule(Long id) {
-        // Instead of returning null, throw an exception
         return vehiculeRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Vehicule introuvable avec l'id : " + id));
+                .orElseThrow(() -> new RessourceIntrouvableException(
+                        "Vehicule introuvable avec l'id : " + id));
     }
 
     @Override
     public Vehicule addVehicule(Vehicule v) {
-        return vehiculeRepository.save(v);
+        vehiculeValidator.valider(v);
+        Vehicule saved = vehiculeRepository.save(v);
+        journalisationService.info("Vehicule ajoute : id=" + saved.getIdVehicule());
+        return saved;
     }
 
     @Override
     public Vehicule modifyVehicule(Vehicule v) {
-        if (!vehiculeRepository.existsById(v.getIdVehicule())) {
-            throw new RuntimeException("Impossible de modifier : Vehicule introuvable.");
+        if (v.getIdVehicule() == null || !vehiculeRepository.existsById(v.getIdVehicule())) {
+            throw new RessourceIntrouvableException(
+                    "Impossible de modifier : vehicule introuvable (id " + v.getIdVehicule() + ").");
         }
-        return vehiculeRepository.save(v);
+        vehiculeValidator.valider(v);
+        Vehicule saved = vehiculeRepository.save(v);
+        journalisationService.info("Vehicule modifie : id=" + saved.getIdVehicule());
+        return saved;
     }
 
     @Override
     public void removeVehicule(Long id) {
+        if (id == null || !vehiculeRepository.existsById(id)) {
+            throw new RessourceIntrouvableException(
+                    "Impossible de supprimer : vehicule introuvable (id " + id + ").");
+        }
         vehiculeRepository.deleteById(id);
+        journalisationService.info("Vehicule supprime : id=" + id);
     }
 }

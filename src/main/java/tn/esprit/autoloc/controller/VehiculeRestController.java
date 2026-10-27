@@ -8,10 +8,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import tn.esprit.autoloc.domain.Vehicule;
 import tn.esprit.autoloc.service.IVehiculeService;
+import tn.esprit.autoloc.service.tarification.TarificationService;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
-@Tag(name = "Gestion des véhicules", description = "API CRUD pour les véhicules")
+@Tag(name = "Autoloc - CRUD des vehicules", description = "API CRUD pour les véhicules")
 @RestController
 @RequiredArgsConstructor // Better than @AllArgsConstructor for final fields (DIP)
 @RequestMapping("/vehicule")
@@ -19,6 +22,7 @@ public class VehiculeRestController {
 
     // DIP: Depends on the abstraction (Interface), not the implementation
     private final IVehiculeService vehiculeService;
+    private final TarificationService tarificationService;
 
     @Operation(description = "Récupérer tous les véhicules de la base")
     @GetMapping("/retrieve-all-vehicules")
@@ -53,5 +57,22 @@ public class VehiculeRestController {
         vehiculeService.removeVehicule(id);
         // SRP: Return 204 No Content for a successful delete
         return ResponseEntity.noContent().build();
+    }
+
+    @Operation(description = "Calculer le prix d'une location selon la politique tarifaire choisie")
+    @GetMapping("/{id}/prix")
+    public ResponseEntity<Map<String, Object>> calculerPrix(@PathVariable("id") Long id,
+                                                            @RequestParam("type") String type,
+                                                            @RequestParam("jours") int jours) {
+        Vehicule vehicule = vehiculeService.retrieveVehicule(id);
+        double prix = tarificationService.calculer(type, vehicule.getTarifJournalier().doubleValue(), jours);
+
+        Map<String, Object> reponse = new LinkedHashMap<>();
+        reponse.put("immatriculation", vehicule.getImmatriculation());
+        reponse.put("tarifJournalier", vehicule.getTarifJournalier());
+        reponse.put("type", type.toUpperCase());
+        reponse.put("jours", jours);
+        reponse.put("prix", prix);
+        return ResponseEntity.ok(reponse);
     }
 }
